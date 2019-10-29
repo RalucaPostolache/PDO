@@ -1,0 +1,84 @@
+public function select($table) {
+        $instance = new ConnectDbWOSingleton();
+        $db = $instance->getConnection();
+        $stmt = $db->prepare("SELECT * FROM `".$table."`");
+        $stmt->execute();
+        if($stmt->rowCount() > 0) {
+            $i = 0;
+            while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $var[$i] = $row;
+                $i++;
+            }
+        }
+        if($var != NULL) {
+            return $var;
+        }
+        return false;
+    }
+
+    public function selectOne($table, $column, $value) {
+        $instance = new ConnectDbWOSingleton();
+        $db = $instance->getConnection();
+        $stmt = $db->prepare("SELECT * FROM `".$table."` WHERE ".$column."='".$value."'");
+        $stmt->execute();
+        if($stmt->rowCount() > 0) {
+            $i = 0;
+            while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $var[$i] = $row;
+                $i++;
+            }
+        }
+        if($var != NULL) {
+            return $var;
+        }
+        return false;
+    }
+
+public function insert($table, $columns, $values) {
+        $instance = new ConnectDbWOSingleton();
+        $db = $instance->getConnection();
+        $singleQuote = '`';
+
+        $query = "INSERT INTO `".$table."`"."(".$singleQuote;
+        foreach($columns as $column) {
+            $query .= $column."`, `";
+        }
+        $query = rtrim($query, "`, `");
+        $query .= "`) VALUES (";
+        foreach($columns as $column) {
+            $query .= ":".$column.", ";
+        }
+        $query = rtrim($query, ", ");
+        $query .= ')';
+        var_dump($query);
+        $stmt = $db->prepare($query);
+        foreach (array_combine($columns, $values) as $column => $value) {
+            $stmt->bindValue(':'.$column, $value, PDO::PARAM_STR);
+        }
+        $execute = $stmt->execute();
+    }
+
+public function update($table, $columns, $values, $columnCondition, $valueCondition) {
+        $instance = new ConnectDbWOSingleton();
+        $db = $instance->getConnection();
+        $query = "UPDATE `".$table."` SET `";
+        foreach ($columns as $column) {
+            $query .= $column."`=:".$column." , `";
+        }
+        $query = rtrim($query, " , `");
+        $query .= " WHERE `".$columnCondition."`=:".$columnCondition;
+        $stmt = $db->prepare($query);
+        foreach (array_combine($columns, $values) as $column => $value) {
+            $stmt->bindValue(':'.$column, $value, PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':'.$columnCondition, $valueCondition, PDO::PARAM_STR);
+        $execute = $stmt->execute();
+    }
+
+public function delete($table, $column, $value) {
+        $instance = new ConnectDbWOSingleton();
+        $db = $instance->getConnection();
+        $stmt = $db->prepare("DELETE FROM `".$table."` WHERE `".$column."`=:".$column);
+        $stmt->bindValue(':'.$column, $value, PDO::PARAM_STR);
+        $stmt->execute();
+    }
